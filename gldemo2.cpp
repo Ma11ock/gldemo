@@ -9,6 +9,7 @@
 #include "loadobj.hpp"
 
 #include "shader.hpp"
+#include "matrix.hpp"
 
 #include <iostream>
 
@@ -32,8 +33,22 @@ static bool rightButtonIsPressed = false;
 using namespace std::string_literals;
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+constexpr unsigned int SCR_WIDTH = 800;
+constexpr unsigned int SCR_HEIGHT = 600;
+
+struct camera
+{
+    glm::vec3 position;
+    glm::vec3 direction;
+    glm::vec3 up;
+    // Field of view.
+    float fov;
+    
+    inline glm::vec3 getRightVector() const
+    {
+        return glm::normalize(glm::cross(up, direction));
+    }
+};
 
 struct thing
 {
@@ -45,8 +60,9 @@ struct thing
     GLuint iboId = 0;
     GLuint vaoId = 0;
 
-    void draw()
+    void draw(const Shader &shader)
     {
+        ms::pushMatricesToShaders(shader);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texId);
         glBindVertexArray(vaoId);
@@ -185,22 +201,21 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        glm::mat4 projectionMatrix = IDENTITY_MATRIX;
-        projectionMatrix = glm::perspective(glm::radians(45.f),
-                                            1.f,
-                                            0.1f,
-                                            1000.f);
-        glm::mat4 viewMatrix = IDENTITY_MATRIX;
-        viewMatrix = glm::lookAt(glm::vec3(0.f, 0.f, 3.f),
-                                 glm::vec3(0.f, 0.f, 0.f),
-                                 glm::vec3(0.f, 1.f, 0.f));
-        // viewMatrix = glm::lookAt(glm::vec3(0.f, 100.f, 50.f),
-        //                              glm::vec3(0.f, 80.f, 0.f),
-        //                              glm::vec3(0.f, 1.f, 0.f));
-        //viewMatrix = glm::translate(IDENTITY_MATRIX, glm::vec3(0.f, 0.f, -3.f));
-        viewMatrix = glm::rotate(viewMatrix, glm::radians(xRot), glm::vec3(1.f, 0.f, 0.f));
-        viewMatrix = glm::rotate(viewMatrix, glm::radians(yRot), glm::vec3(0.f, 1.f, 0.f));
-        viewMatrix = glm::scale(viewMatrix, glm::vec3(scale, scale, scale));
+        ms::setMatrixMode(ms::Stack::Projection, true);
+        ms::perspective(glm::radians(45.f),
+                        1.f,
+                        0.1f,
+                        1000.f);
+
+        ms::setMatrixMode(ms::Stack::View, true);
+        ms::lookAt(glm::vec3(0.f, 0.f, 3.f),
+                   glm::vec3(0.f, 0.f, 0.f),
+                   glm::vec3(0.f, 1.f, 0.f));
+        ms::rotate(glm::radians(xRot), glm::vec3(1.f, 0.f, 0.f));
+        ms::rotate(glm::radians(yRot), glm::vec3(0.f, 1.f, 0.f));
+        ms::scale(glm::vec3(scale, scale, scale));
+        ms::setMatrixMode(ms::Stack::Model, true);
+
 
         // input
         // -----
@@ -212,30 +227,24 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
 
         // activate shader
-        ourShader.use();
+        // create transformations
+        ms::translate(glm::vec3(20.f, 0.f, 10.f));
+
         ourShader.setFloat("uAmbientStrength", 0.2f);
         ourShader.setVec3("uLightpos", 10.f, 80.f, 20.f);
         ourShader.setFloat("uTexUnit", 0.f);
-        ourShader.setMat4("uProjectionMatrix", projectionMatrix);
-        ourShader.setMat4("uViewMatrix", viewMatrix);
+        claire.draw(ourShader);
 
-        // create transformations
-        auto claireTransform = glm::translate(IDENTITY_MATRIX,
-                                              glm::vec3(20.f, 0.f, 10.f));
+        ms::loadIdentity();
+        ms::translate(glm::vec3(15.f, 0.f, 45.f));
+        ms::rotate(glm::radians(180.f),
+                   glm::vec3(0.f, 1.f, 0.f));
+        tyrant.draw(ourShader);
 
-        ourShader.setMat4("uModelMatrix", claireTransform);
-        claire.draw();
-
-        auto tyrantTransform = glm::translate(IDENTITY_MATRIX, glm::vec3(15.f, 0.f, 45.f));
-        tyrantTransform = glm::rotate(tyrantTransform, glm::radians(180.f),
-                                      glm::vec3(0.f, 1.f, 0.f));
-        ourShader.setMat4("uModelMatrix", tyrantTransform);
-        tyrant.draw();
-
-        auto leonTransform = glm::translate(IDENTITY_MATRIX, glm::vec3(-10.f, 0.f, 20.f));
-        leonTransform = glm::rotate(leonTransform, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
-        ourShader.setMat4("uModelMatrix", leonTransform);
-        leon.draw();
+        ms::loadIdentity();
+        ms::translate(glm::vec3(-10.f, 0.f, 20.f));
+        ms::rotate(glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
+        leon.draw(ourShader);
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);

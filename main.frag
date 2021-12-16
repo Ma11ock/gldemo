@@ -3,6 +3,8 @@
 uniform sampler2D uTexUnit;
 uniform float uAmbientStrength;
 uniform vec3 uLightPos;
+uniform mat4 uTextureMatrix;
+uniform mat4 uColorMatrix;
 
 in vec2 fTexCoord;
 in vec3 fNormal;
