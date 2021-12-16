@@ -213,6 +213,8 @@ int main()
 
         // activate shader
         ourShader.use();
+        ourShader.setFloat("uAmbientStrength", 0.2f);
+        ourShader.setVec3("uLightpos", 10.f, 80.f, 20.f);
         ourShader.setFloat("uTexUnit", 0.f);
         ourShader.setMat4("uProjectionMatrix", projectionMatrix);
         ourShader.setMat4("uViewMatrix", viewMatrix);
