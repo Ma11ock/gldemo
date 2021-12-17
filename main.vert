@@ -15,7 +15,6 @@ out vec2 fTexCoord;
 out vec3 fNormal;
 out vec3 fFragPos;
 
-
 void main()
 {
     vec4 position = vec4(vPosition, 1.);

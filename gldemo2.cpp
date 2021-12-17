@@ -137,12 +137,15 @@ struct thing
     }
 };
 
-static thing claire;
-static thing tyrant;
-static thing leon;
-static thing teapot;
+namespace
+{
+    thing claire;
+    thing tyrant;
+    thing leon;
+    thing teapot;
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+}
 
-static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 int main()
 {
@@ -212,20 +215,18 @@ int main()
         ms::setMatrixMode(ms::Stack::View, true);
         ms::loadMatrix(camera.GetViewMatrix());
 
-        // ms::lookAt(glm::vec3(0.f, 0.f, 3.f),
-        //            glm::vec3(0.f, 0.f, 0.f),
-        //            glm::vec3(0.f, 1.f, 0.f));
-        // ms::rotate(glm::radians(xRot), glm::vec3(1.f, 0.f, 0.f));
-        // ms::rotate(glm::radians(yRot), glm::vec3(0.f, 1.f, 0.f));
-        // ms::scale(glm::vec3(scale, scale, scale));
-
+        glm::vec3 lightColor(1.f, 1.f, 1.f);
 
         ourShader.setVec3("uViewPos", camera.Position);
-        ourShader.setFloat("uSpecularStrength", 0.5f);
-        ourShader.setVec3("uLightColor", glm::vec3(1.f, 1.f, 1.f));
-        ourShader.setFloat("uAmbientStrength", 0.2f);
-        ourShader.setVec3("uLightpos", 10.f, 80.f, 20.f);
+        ourShader.setVec3("uLight.specularColor", lightColor * glm::vec3(1.f));
+        ourShader.setVec3("uLight.diffuseColor", lightColor * glm::vec3(1.f));
+        ourShader.setVec3("uLight.ambientColor", lightColor * glm::vec3(0.2f));
+        ourShader.setVec3("uLight.position", 10.f, 80.f, 20.f);
         ourShader.setFloat("uTexUnit", 0.f);
+        ourShader.setFloat("uMaterial.shininess", 32.f);
+        ourShader.setVec3("uMaterial.diffuse", 1.f, 1.f, 1.f);
+        ourShader.setVec3("uMaterial.specular", 1.f, 1.f, 1.f);
+        ourShader.setVec3("uMaterial.ambient", 1.f, 1.f, 1.f);
 
         // input
         // -----
