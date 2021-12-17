@@ -222,11 +222,9 @@ int main()
         ourShader.setVec3("uLight.diffuseColor", lightColor * glm::vec3(1.f));
         ourShader.setVec3("uLight.ambientColor", lightColor * glm::vec3(0.2f));
         ourShader.setVec3("uLight.position", 10.f, 80.f, 20.f);
-        ourShader.setFloat("uTexUnit", 0.f);
-        ourShader.setFloat("uMaterial.shininess", 32.f);
-        ourShader.setVec3("uMaterial.diffuse", 1.f, 1.f, 1.f);
-        ourShader.setVec3("uMaterial.specular", 1.f, 1.f, 1.f);
-        ourShader.setVec3("uMaterial.ambient", 1.f, 1.f, 1.f);
+        ourShader.setFloat("uMaterial.diffuse", 0.f);
+        ourShader.setFloat("uMaterial.specular", 0.f);
+        ourShader.setFloat("uMaterial.shininess", 64.f);
 
         // input
         // -----
