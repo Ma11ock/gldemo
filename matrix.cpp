@@ -49,6 +49,11 @@ void matrixStack::pushMatrixToShader(const char *name, const Shader &shader)
     }
 }
 
+ms::Stack ms::getMatrixMode()
+{
+    return static_cast<ms::Stack>(curStack);
+}
+
 glm::mat4 &matrixStack::getMatrix(bool needResend)
 {
     stacksNeedSend[curStack] = needResend;
@@ -125,8 +130,8 @@ void ms::lookAt(const glm::vec3 &eye, const glm::vec3 &center,
 void ms::pushMatricesToShaders(const Shader &shader)
 {
     // Check if any of the combination matrices need to be updated.
-    if(stacksNeedSend[toInt(ms::Stack::Model)] ||
-       stacksNeedSend[toInt(ms::Stack::View)])
+    //if(stacksNeedSend[toInt(ms::Stack::Model)] ||
+    //   stacksNeedSend[toInt(ms::Stack::View)])
     {
         glm::mat4 modelViewMatrix =
             stacks[toInt(ms::Stack::View)].getMatrix() * 
@@ -142,7 +147,7 @@ void ms::pushMatricesToShaders(const Shader &shader)
                        glm::mat3(glm::transpose(glm::inverse(stacks[toInt(ms::Stack::Model)]
                                                              .getMatrix()))));
     }
-    else if(stacksNeedSend[toInt(ms::Stack::Projection)])
+    //else if(stacksNeedSend[toInt(ms::Stack::Projection)])
     {
         glm::mat4 modelViewProjectionMatrix =
             stacks[toInt(ms::Stack::Projection)].getMatrix() * 

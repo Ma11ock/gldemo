@@ -15,13 +15,13 @@ out vec2 fTexCoord;
 out vec3 fNormal;
 out vec3 fFragPos;
 
-vec4 position = vec4(vPosition, 1.);
 
 void main()
 {
+    vec4 position = vec4(vPosition, 1.);
     fTexCoord = vTexCoord;
     fNormal = uNormalMatrix * vNormal;
-    fFragPos = vPosition;
+    fFragPos = vec3(uModelMatrix * position);
 
     gl_Position = uModelViewProjectionMatrix * position;
 }

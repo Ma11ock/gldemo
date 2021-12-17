@@ -43,6 +43,7 @@ namespace ms
     void loadMatrix(const glm::mat4 &mat);
     void loadIdentity();
     void setMatrixMode(Stack stack, bool loadIdentity = false);
+    Stack getMatrixMode();
 
     void perspective(float radFOV, float aspectRatio, float near,
                      float far);
@@ -51,8 +52,8 @@ namespace ms
                 const glm::vec3 &up);
 
     inline void lookAt(float eye0, float eye1, float eye2,
-                float center0, float center1, float center2,
-                float up0, float up1, float up2)
+                       float center0, float center1, float center2,
+                       float up0, float up1, float up2)
     {
         lookAt(glm::vec3(eye0, eye1, eye2),
                glm::vec3(center0, center1, center2),

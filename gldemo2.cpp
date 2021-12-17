@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "loadobj.hpp"
+#include "Camera.hpp"
 
 #include "shader.hpp"
 #include "matrix.hpp"
@@ -30,26 +31,18 @@ static float xRot = 0.f;
 static float yRot = 0.f;
 static bool rightButtonIsPressed = false;
 
+
 using namespace std::string_literals;
 
 // settings
 constexpr unsigned int SCR_WIDTH = 800;
 constexpr unsigned int SCR_HEIGHT = 600;
 
-struct camera
-{
-    glm::vec3 position;
-    glm::vec3 direction;
-    glm::vec3 up;
-    // Field of view.
-    float fov;
-    
-    inline glm::vec3 getRightVector() const
-    {
-        return glm::normalize(glm::cross(up, direction));
-    }
-};
-
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+// timing
+float deltaTime = 0.0f;	// time between current frame and last frame
+float lastFrame = 0.0f;
 struct thing
 {
     buffers bufs;
@@ -147,6 +140,9 @@ struct thing
 static thing claire;
 static thing tyrant;
 static thing leon;
+static thing teapot;
+
+static Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 int main()
 {
@@ -189,6 +185,8 @@ int main()
     claire.createThing("claire.obj", "claire.bmp");
     tyrant.createThing("tyrant.obj", "tyrant.bmp");
     leon.createThing("leon.obj", "leon.bmp");
+    teapot.createThing("teapot.obj", "earth.jpg");
+        
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
@@ -201,21 +199,33 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         ms::setMatrixMode(ms::Stack::Projection, true);
-        ms::perspective(glm::radians(45.f),
+        ms::perspective(glm::radians(camera.Zoom),
                         1.f,
                         0.1f,
                         1000.f);
 
         ms::setMatrixMode(ms::Stack::View, true);
-        ms::lookAt(glm::vec3(0.f, 0.f, 3.f),
-                   glm::vec3(0.f, 0.f, 0.f),
-                   glm::vec3(0.f, 1.f, 0.f));
-        ms::rotate(glm::radians(xRot), glm::vec3(1.f, 0.f, 0.f));
-        ms::rotate(glm::radians(yRot), glm::vec3(0.f, 1.f, 0.f));
-        ms::scale(glm::vec3(scale, scale, scale));
-        ms::setMatrixMode(ms::Stack::Model, true);
+        ms::loadMatrix(camera.GetViewMatrix());
 
+        // ms::lookAt(glm::vec3(0.f, 0.f, 3.f),
+        //            glm::vec3(0.f, 0.f, 0.f),
+        //            glm::vec3(0.f, 1.f, 0.f));
+        // ms::rotate(glm::radians(xRot), glm::vec3(1.f, 0.f, 0.f));
+        // ms::rotate(glm::radians(yRot), glm::vec3(0.f, 1.f, 0.f));
+        // ms::scale(glm::vec3(scale, scale, scale));
+
+
+        ourShader.setVec3("uViewPos", camera.Position);
+        ourShader.setFloat("uSpecularStrength", 0.5f);
+        ourShader.setVec3("uLightColor", glm::vec3(1.f, 1.f, 1.f));
+        ourShader.setFloat("uAmbientStrength", 0.2f);
+        ourShader.setVec3("uLightpos", 10.f, 80.f, 20.f);
+        ourShader.setFloat("uTexUnit", 0.f);
 
         // input
         // -----
@@ -228,17 +238,18 @@ int main()
 
         // activate shader
         // create transformations
+        ms::setMatrixMode(ms::Stack::Model, true);
+        ms::translate(10.f, 80.f, 20.f);
+        teapot.draw(ourShader);
+        ms::loadIdentity();
         ms::translate(glm::vec3(20.f, 0.f, 10.f));
 
-        ourShader.setFloat("uAmbientStrength", 0.2f);
-        ourShader.setVec3("uLightpos", 10.f, 80.f, 20.f);
-        ourShader.setFloat("uTexUnit", 0.f);
+        ms::rotate(glm::radians(360.f * glfwGetTime()),
+                   glm::vec3(0.f, 1.f, 0.f));
         claire.draw(ourShader);
 
         ms::loadIdentity();
         ms::translate(glm::vec3(15.f, 0.f, 45.f));
-        ms::rotate(glm::radians(180.f),
-                   glm::vec3(0.f, 1.f, 0.f));
         tyrant.draw(ourShader);
 
         ms::loadIdentity();
@@ -262,6 +273,18 @@ int main()
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
+    
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
@@ -277,9 +300,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scrollInput(GLFWwindow* window, double xoffset, double yoffset)
 {
-    scale -= SCLFACT * static_cast<float>(xoffset - yoffset);
-    if(scale < MINSCALE)
-        scale = MINSCALE;
+    camera.ProcessMouseScroll(yoffset);
 }
 
 void mouseButton(GLFWwindow *window, int button, int action, int mods)
@@ -306,15 +327,19 @@ void mouseButton(GLFWwindow *window, int button, int action, int mods)
 
 void mouseMove(GLFWwindow *window, double xpos, double ypos)
 {
-    float dx = xMouse - static_cast<float>(xpos);
-    float dy = yMouse - static_cast<float>(ypos);
-
-    xMouse = static_cast<float>(xpos);
-    yMouse = static_cast<float>(ypos);
-
-    if(rightButtonIsPressed)
+    static bool firstMouse = true;
+    if(firstMouse)
     {
-        xRot += (ANGFACT * dy);
-        yRot += (ANGFACT * dx);
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
     }
+
+    float dx = xpos - lastX;
+    float dy = lastY - ypos;
+
+    lastX = xpos;
+    lastY = ypos;
+    if(rightButtonIsPressed)
+        camera.ProcessMouseMovement(dx, dy);
 }
