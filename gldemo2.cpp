@@ -218,10 +218,13 @@ int main()
         glm::vec3 lightColor(1.f, 1.f, 1.f);
 
         ourShader.setVec3("uViewPos", camera.Position);
-        ourShader.setVec3("uLight.specularColor", lightColor * glm::vec3(1.f));
-        ourShader.setVec3("uLight.diffuseColor", lightColor * glm::vec3(1.f));
-        ourShader.setVec3("uLight.ambientColor", lightColor * glm::vec3(0.2f));
-        ourShader.setVec3("uLight.position", 10.f, 80.f, 20.f);
+        ourShader.setUInt("uNumDirLights", 1);
+        ourShader.setUInt("uNumPointLights", 0);
+        ourShader.setUInt("uNumSpotLights", 0);
+        ourShader.setVec3("uDirLights[0].specular", lightColor * glm::vec3(1.f));
+        ourShader.setVec3("uDirLights[0].diffuse", lightColor * glm::vec3(1.f));
+        ourShader.setVec3("uDirLights[0].ambient", lightColor * glm::vec3(0.2f));
+        ourShader.setVec3("uDirLights[0].direction", -0.2f, -1.f, -0.3f);
         ourShader.setFloat("uMaterial.diffuse", 0.f);
         ourShader.setFloat("uMaterial.specular", 0.f);
         ourShader.setFloat("uMaterial.shininess", 64.f);
