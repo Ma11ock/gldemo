@@ -19,16 +19,15 @@ public:
                 const std::vector<std::uint32_t> &indices)
     {
         // TODO vertex array should be bindable
-
-        glGenVertexArrays(1, &mId);
-        glBindVertexArray(mId);
-
-        mVertexBuffer = std::make_unique<ConstantBuffer>(vertices, 0);
-        mTextureBuffer = std::make_unique<ConstantBuffer>(texCoords, 1);
-        mNormalBuffer = std::make_unique<ConstantBuffer>(normals, 2);
+        glCreateVertexArrays(1, &mId);
+        mVertexBuffer = std::make_unique<ConstantBuffer>(vertices, 0, mId);
+        mTextureBuffer = std::make_unique<ConstantBuffer>(texCoords, 1, mId);
+        mNormalBuffer = std::make_unique<ConstantBuffer>(normals, 2, mId);
         mIndexBuffer = std::make_unique<IndexBuffer>(indices);
 
-        glBindVertexArray(0);
+        glVertexArrayElementBuffer(mId,
+                                   getBindableId(mIndexBuffer.get()));
+
     }
 
     VertexArray() = default;

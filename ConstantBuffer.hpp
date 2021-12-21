@@ -14,39 +14,43 @@ class ConstantBuffer : public Bindable
 public:
     template<class T>
     ConstantBuffer(const std::vector<T> &vertices, std::uint32_t index,
-                   std::int32_t numElems, GLenum underlyingType = GL_FLOAT,
-                   bool normalize = false)
+                   std::uint32_t vaoId, std::int32_t numElems, 
+                   GLenum underlyingType = GL_FLOAT, bool normalize = false)
         : Bindable(),mCountVertices(vertices.size()),mTypeSize(sizeof(T))
     {
-        glGenBuffers(1, &mId);
-        glEnableVertexAttribArray(index);
-        glBindBuffer(GL_ARRAY_BUFFER, mId);
-        glVertexAttribPointer(index, numElems, underlyingType,
-                              normalize, 0, nullptr);
 
-        glBufferData(GL_ARRAY_BUFFER, mCountVertices * mTypeSize,
-                     vertices.data(), GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glCreateBuffers(1, &mId);
+        glNamedBufferStorage(mId, sizeof(T) * vertices.size(),
+                             vertices.data(), GL_DYNAMIC_STORAGE_BIT);
+        glVertexArrayVertexBuffer(vaoId, index, mId, 0, sizeof(T)); 
+
+        glEnableVertexArrayAttrib(vaoId, index);
+        glVertexArrayAttribFormat(vaoId, index, numElems, underlyingType,
+                                  normalize, 0);
+        glVertexArrayAttribBinding(vaoId, index, index);
     }
     
-    ConstantBuffer(const std::vector<glm::vec4> &vertices, std::uint32_t index)
-        : ConstantBuffer(vertices, index, 4)
+    ConstantBuffer(const std::vector<glm::vec4> &vertices, std::uint32_t index,
+                   std::uint32_t vaoId)
+        : ConstantBuffer(vertices, index, vaoId, 4)
     {
     }
 
-    ConstantBuffer(const std::vector<glm::vec3> &vertices, std::uint32_t index)
-        : ConstantBuffer(vertices, index, 3)
+    ConstantBuffer(const std::vector<glm::vec3> &vertices, std::uint32_t index,
+                   std::uint32_t vaoId)
+        : ConstantBuffer(vertices, index, vaoId, 3)
     {
     }
 
-    ConstantBuffer(const std::vector<glm::vec2> &vertices, std::uint32_t index)
-        : ConstantBuffer(vertices, index, 2)
+    ConstantBuffer(const std::vector<glm::vec2> &vertices, std::uint32_t index,
+                   std::uint32_t vaoId)
+        : ConstantBuffer(vertices, index, vaoId, 2)
     {
     }
     
     ConstantBuffer(const std::vector<float> &vertices, std::uint32_t index,
-                   std::int32_t numElems, bool normalize = false)
-        : ConstantBuffer(vertices, index, numElems, GL_FLOAT, normalize)
+                   std::int32_t numElems, std::uint32_t vaoId, bool normalize = false)
+        : ConstantBuffer(vertices, index, numElems, vaoId, GL_FLOAT, normalize)
     {
     }
 

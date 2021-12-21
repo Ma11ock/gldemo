@@ -16,19 +16,36 @@ public:
     {
     }
 
-    template<class T>
-    IndexBuffer(const std::vector<T> &indices)
-        : Bindable(),mCountIndices(indices.size()),mTypeSize(sizeof(T)),
-          mUnderlyingType(GL_UNSIGNED_INT)
+    IndexBuffer(const std::vector<std::uint8_t> &indices)
+        : Bindable(),mCountIndices(indices.size()),mTypeSize(1),
+          mUnderlyingType(GL_UNSIGNED_BYTE)
     {
-        static_assert(std::is_unsigned_v<T> && sizeof(T) <= sizeof(std::uint32_t),
-                      "Index buffer type must be unsigned int and no greater than 32 bits.");
-
         glGenBuffers(1, &mId);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mId);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(T) * mCountIndices,
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mCountIndices,
                      indices.data(), GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+
+    IndexBuffer(const std::vector<std::uint16_t> &indices)
+        : Bindable(),mCountIndices(indices.size()),mTypeSize(sizeof(std::uint16_t)),
+          mUnderlyingType(GL_UNSIGNED_SHORT)
+    {
+        glGenBuffers(1, &mId);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mId);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mTypeSize * mCountIndices,
+                     indices.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+
+    IndexBuffer(const std::vector<std::uint32_t> &indices)
+        : Bindable(),mCountIndices(indices.size()),mTypeSize(sizeof(std::uint32_t)),
+          mUnderlyingType(GL_UNSIGNED_INT)
+    {
+        glCreateBuffers(1, &mId);
+        glNamedBufferStorage(mId, mTypeSize * indices.size(), indices.data(),
+                             GL_DYNAMIC_STORAGE_BIT); 
+        
     }
 
     virtual void bind()

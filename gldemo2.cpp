@@ -53,10 +53,8 @@ struct thing
     void draw(const Shader &shader)
     {
         ms::pushMatricesToShaders(shader);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texId);
+        glBindTextureUnit(0, texId);
         va->draw();
-        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     void createThing(const std::filesystem::path &objPath,
@@ -71,13 +69,12 @@ struct thing
         if(!ptr)
             throw std::invalid_argument("Could not open texture at "s + texPath.generic_string());
 
-        glGenTextures(1, &texId);
-        glBindTexture(GL_TEXTURE_2D, texId);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight,
-                     0, GL_RGB, GL_UNSIGNED_BYTE, ptr);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        glCreateTextures(GL_TEXTURE_2D, 1, &texId);
+        glTextureParameteri(texId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(texId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        glTextureStorage2D(texId, 1, GL_RGB8, texWidth, texHeight);
+        glTextureSubImage2D(texId, 0, 0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, ptr);
 
         stbi_image_free(ptr);
 
@@ -112,8 +109,8 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL test", nullptr, nullptr);
+    if (window == nullptr)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
