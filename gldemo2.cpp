@@ -11,6 +11,7 @@
 
 #include "shader.hpp"
 #include "matrix.hpp"
+#include "VertexArray.hpp"
 
 #include <iostream>
 
@@ -46,22 +47,15 @@ float lastFrame = 0.0f;
 struct thing
 {
     buffers bufs;
-    GLuint vertexBufferId = 0;
-    GLuint normalBufferId = 0;
-    GLuint texBufferId = 0;
     GLuint texId = 0;
-    GLuint iboId = 0;
-    GLuint vaoId = 0;
+    std::unique_ptr<VertexArray> va;
 
     void draw(const Shader &shader)
     {
         ms::pushMatricesToShaders(shader);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texId);
-        glBindVertexArray(vaoId);
-        glDrawElements(GL_TRIANGLES, bufs.indices.size(),
-                       GL_UNSIGNED_INT, bufs.indices.data());
-        glBindVertexArray(0);
+        va->draw();
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
@@ -90,50 +84,8 @@ struct thing
         // OBJ file.
         bufs = loadObjFile(objPath);
 
-        glGenVertexArrays(1, &vaoId);
-        glBindVertexArray(vaoId);
-
-        // Vertex buffer.
-        glGenBuffers(1, &vertexBufferId);
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-        glBufferData(GL_ARRAY_BUFFER, bufs.vertices.size() * sizeof(glm::vec3),
-                     bufs.vertices.data(), GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
-        // Texture buffer.
-        glGenBuffers(1, &texBufferId);
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, texBufferId);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-        glBufferData(GL_ARRAY_BUFFER, bufs.texUVs.size() * sizeof(glm::vec2),
-                     bufs.texUVs.data(), GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // Normal buffer.
-        glGenBuffers(1, &normalBufferId);
-        glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, normalBufferId);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-        glBufferData(GL_ARRAY_BUFFER, bufs.normals.size() * sizeof(glm::vec3),
-                     bufs.normals.data(), GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // Index buffer.
-        glGenBuffers(1, &iboId);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
-
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(std::uint32_t) *
-                     bufs.indices.size(), bufs.indices.data(), GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    
-        glBindVertexArray(0);
+        va = std::make_unique<VertexArray>(bufs.vertices, bufs.texUVs, bufs.normals,
+                                           bufs.indices);
     }
 };
 
@@ -180,6 +132,7 @@ int main()
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);    
 
     // build and compile our shader zprogram
     // ------------------------------------
@@ -236,7 +189,7 @@ int main()
         // render
         // ------
         glClearColor(0.f, 0.f, 0.f, 1.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT); // also clear the depth buffer now!
 
         // activate shader
         // create transformations
