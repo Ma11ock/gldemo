@@ -245,17 +245,17 @@ int main()
 
         glm::vec3 lightColor(1.f, 1.f, 1.f);
 
-        ourShader.setVec3("uViewPos", camera.Position);
-        ourShader.setUInt("uNumDirLights", 1);
-        ourShader.setUInt("uNumPointLights", 0);
-        ourShader.setUInt("uNumSpotLights", 0);
-        ourShader.setVec3("uDirLights[0].specular", lightColor * glm::vec3(1.f));
-        ourShader.setVec3("uDirLights[0].diffuse", lightColor * glm::vec3(1.f));
-        ourShader.setVec3("uDirLights[0].ambient", lightColor * glm::vec3(0.2f));
-        ourShader.setVec3("uDirLights[0].direction", -0.2f, -1.f, -0.3f);
-        ourShader.setInt("uMaterial.diffuse", 0);
-        ourShader.setInt("uMaterial.specular", 0);
-        ourShader.setFloat("uMaterial.shininess", 64.f);
+        ourShader.set("uViewPos", camera.Position);
+        ourShader.set("uNumDirLights", 1u);
+        ourShader.set("uNumPointLights", 0u);
+        ourShader.set("uNumSpotLights", 0u);
+        ourShader.set("uDirLights[0].specular", lightColor * glm::vec3(1.f));
+        ourShader.set("uDirLights[0].diffuse", lightColor * glm::vec3(1.f));
+        ourShader.set("uDirLights[0].ambient", lightColor * glm::vec3(0.2f));
+        ourShader.set("uDirLights[0].direction", -0.2f, -1.f, -0.3f);
+        ourShader.set("uMaterial.diffuse", 0);
+        ourShader.set("uMaterial.specular", 0);
+        ourShader.set("uMaterial.shininess", 64.f);
 
         // input
         // -----

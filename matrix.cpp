@@ -45,7 +45,7 @@ void matrixStack::pushMatrixToShader(const char *name, const Shader &shader)
 //    if(stacksNeedSend[curStack])
     {
         stacksNeedSend[curStack] = true;
-        shader.setMat4(name, getMatrix());
+        shader.set(name, getMatrix());
     }
 }
 
@@ -136,14 +136,14 @@ void ms::pushMatricesToShaders(const Shader &shader)
         glm::mat4 modelViewMatrix =
             stacks[toInt(ms::Stack::View)].getMatrix() * 
             stacks[toInt(ms::Stack::Model)].getMatrix();
-        shader.setMat4("uModelViewMatrix", modelViewMatrix);
+        shader.set("uModelViewMatrix", modelViewMatrix);
 
         glm::mat4 modelViewProjectionMatrix =
             stacks[toInt(ms::Stack::Projection)].getMatrix() *
             modelViewMatrix;
-        shader.setMat4("uModelViewProjectionMatrix", modelViewProjectionMatrix);
+        shader.set("uModelViewProjectionMatrix", modelViewProjectionMatrix);
 
-        shader.setMat3("uNormalMatrix",
+        shader.set("uNormalMatrix",
                        glm::mat3(glm::transpose(glm::inverse(stacks[toInt(ms::Stack::Model)]
                                                              .getMatrix()))));
     }
@@ -153,7 +153,7 @@ void ms::pushMatricesToShaders(const Shader &shader)
             stacks[toInt(ms::Stack::Projection)].getMatrix() * 
             stacks[toInt(ms::Stack::View)].getMatrix(false) * 
             stacks[toInt(ms::Stack::Model)].getMatrix(false); 
-        shader.setMat4("uModelViewProjectionMatrix",
+        shader.set("uModelViewProjectionMatrix",
                        modelViewProjectionMatrix);
     }
 

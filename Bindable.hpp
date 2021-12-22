@@ -3,17 +3,18 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #ifdef DEBUG
 
 inline int curLine = 0;
-inline std::string curFile;
-inline std::string curGlCommand;
+inline std::string_view curFile;
+inline std::string_view curGlCommand;
 
-#define GLCall(line) curLine = __LINE__;\
-    curGlCommand = #line;\
-    curFile = __FILE__;\
-    line;
+#define GLCall(line) line;                      \
+    curLine = __LINE__;                         \
+    curGlCommand = #line;                       \
+    curFile = __FILE__; 
 #else
 #define GLCall(line) line;
 #endif // DEBUG
