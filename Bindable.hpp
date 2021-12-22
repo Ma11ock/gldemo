@@ -2,6 +2,21 @@
 #define BINDABLE_HPP
 
 #include <cstdint>
+#include <string>
+
+#ifdef DEBUG
+
+inline int curLine = 0;
+inline std::string curFile;
+inline std::string curGlCommand;
+
+#define GLCall(line) curLine = __LINE__;\
+    curGlCommand = #line;\
+    curFile = __FILE__;\
+    line;
+#else
+#define GLCall(line) line;
+#endif // DEBUG
 
 class Bindable
 {

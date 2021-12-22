@@ -19,28 +19,39 @@ public:
                 const std::vector<std::uint32_t> &indices)
     {
         // TODO vertex array should be bindable
-        glCreateVertexArrays(1, &mId);
+        GLCall(glCreateVertexArrays(1, &mId));
         mVertexBuffer = std::make_unique<ConstantBuffer>(vertices, 0, mId);
         mTextureBuffer = std::make_unique<ConstantBuffer>(texCoords, 1, mId);
         mNormalBuffer = std::make_unique<ConstantBuffer>(normals, 2, mId);
         mIndexBuffer = std::make_unique<IndexBuffer>(indices);
 
-        glVertexArrayElementBuffer(mId,
-                                   getBindableId(mIndexBuffer.get()));
+        GLCall(glVertexArrayElementBuffer(mId,
+                                          getBindableId(mIndexBuffer.get())));
 
+    }
+
+    VertexArray(const std::vector<interleavedType> &vertices,
+                const std::vector<std::uint32_t> &indices)
+    {
+        GLCall(glCreateVertexArrays(1, &mId));
+
+        mVertexBuffer = std::make_unique<ConstantBuffer>(vertices, 0, mId);
+        mIndexBuffer = std::make_unique<IndexBuffer>(indices);
+        GLCall(glVertexArrayElementBuffer(mId,
+                                          getBindableId(mIndexBuffer.get())));
     }
 
     VertexArray() = default;
 
     virtual void draw() const
     {
-        glBindVertexArray(mId);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
-                     getBindableId(mIndexBuffer.get()));
-        glDrawElements(GL_TRIANGLES, mIndexBuffer->getNumIndices(),
-                       GL_UNSIGNED_INT, nullptr);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+        GLCall(glBindVertexArray(mId));
+        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
+                            getBindableId(mIndexBuffer.get())));
+        GLCall(glDrawElements(GL_TRIANGLES, mIndexBuffer->getNumIndices(),
+               GL_UNSIGNED_INT, nullptr));
+        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+        GLCall(glBindVertexArray(0));
     }
 
     virtual ~VertexArray() = default;

@@ -21,6 +21,77 @@ void scrollInput(GLFWwindow* window, double xoffset, double yoffset);
 void mouseButton(GLFWwindow *window, int button, int action, int mods);
 void mouseMove(GLFWwindow *window, double xpos, double ypos);
 
+void openGLMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                           GLsizei length, GLchar const* message, void const* user_param)
+{
+	auto errSrc = [source]()
+    {
+		switch (source)
+		{
+		case GL_DEBUG_SOURCE_API: return "API";
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "WINDOW SYSTEM";
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: return "SHADER COMPILER";
+		case GL_DEBUG_SOURCE_THIRD_PARTY: return "THIRD PARTY";
+		case GL_DEBUG_SOURCE_APPLICATION: return "APPLICATION";
+		case GL_DEBUG_SOURCE_OTHER: return "OTHER";
+        default: return "Unknown";
+		}
+	};
+
+	auto errType = [type]()
+    {
+		switch (type)
+		{
+		case GL_DEBUG_TYPE_ERROR: return "ERROR";
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED_BEHAVIOR";
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "UNDEFINED_BEHAVIOR";
+		case GL_DEBUG_TYPE_PORTABILITY: return "PORTABILITY";
+		case GL_DEBUG_TYPE_PERFORMANCE: return "PERFORMANCE";
+		case GL_DEBUG_TYPE_MARKER: return "MARKER";
+		case GL_DEBUG_TYPE_OTHER: return "OTHER";
+        default: return "Unknown";
+		}
+	};
+
+
+    std::string_view severityStr;
+    switch (severity)
+    {
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+#ifdef DEBUG
+
+    std::cout << "In " << curFile << ':' << curLine << ": "
+              << curGlCommand << ": ";
+    
+#endif // DEBUG
+        std::cout << errSrc() << ", " << errType() << ", Notification, "
+                  << id << ": " << message << '\n';
+        return;
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        severityStr = "LOW";
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        severityStr = "MEDIUM";
+        break;
+    case GL_DEBUG_SEVERITY_HIGH:
+        severityStr = "HIGH";
+        break;
+    default:
+        severityStr = "Unknown";
+        break;
+    }
+#ifdef DEBUG
+
+    std::cerr << "In " << curFile << ':' << curLine << ": "
+              << curGlCommand << ": ";
+    
+#endif // DEBUG
+    std::cerr << errSrc() << ", " << errType() << ", " << severityStr 
+              << ", " << id << ": " << message << '\n';
+
+}
+
 constexpr float MINSCALE = 0.005f;
 constexpr float SCLFACT = 0.005f;
 constexpr float ANGFACT = 1.f;
@@ -80,9 +151,13 @@ struct thing
 
         // OBJ file.
         bufs = loadObjFile(objPath);
+        std::vector<interleavedType> overallBuffer(bufs.vertices.size());
 
-        va = std::make_unique<VertexArray>(bufs.vertices, bufs.texUVs, bufs.normals,
-                                           bufs.indices);
+        for(std::size_t i = 0; i < bufs.vertices.size(); i++)
+            overallBuffer[i] = { bufs.vertices[i], bufs.texUVs[i],
+                bufs.normals[i] };
+
+        va = std::make_unique<VertexArray>(overallBuffer, bufs.indices);
     }
 };
 
@@ -126,6 +201,10 @@ int main()
     if(glewInit() != GLEW_OK)
         throw std::runtime_error("Could not init glew");
 
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(openGLMessageCallback, nullptr);
+
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
@@ -144,7 +223,6 @@ int main()
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
     ourShader.use();
-
 
     constexpr glm::mat4 IDENTITY_MATRIX = glm::mat4(1.f);
 
@@ -175,8 +253,8 @@ int main()
         ourShader.setVec3("uDirLights[0].diffuse", lightColor * glm::vec3(1.f));
         ourShader.setVec3("uDirLights[0].ambient", lightColor * glm::vec3(0.2f));
         ourShader.setVec3("uDirLights[0].direction", -0.2f, -1.f, -0.3f);
-        ourShader.setFloat("uMaterial.diffuse", 0.f);
-        ourShader.setFloat("uMaterial.specular", 0.f);
+        ourShader.setInt("uMaterial.diffuse", 0);
+        ourShader.setInt("uMaterial.specular", 0);
         ourShader.setFloat("uMaterial.shininess", 64.f);
 
         // input
