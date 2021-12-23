@@ -24,6 +24,7 @@ void mouseMove(GLFWwindow *window, double xpos, double ypos);
 void openGLMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
                            GLsizei length, GLchar const* message, void const* user_param)
 {
+    // TODO opengl exception type.
 	auto errSrc = [source]()
     {
 		switch (source)
@@ -75,7 +76,12 @@ void openGLMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severit
         severityStr = "MEDIUM";
         break;
     case GL_DEBUG_SEVERITY_HIGH:
-        severityStr = "HIGH";
+#ifdef DEBUG
+        throw OpenGLException(message, errSrc(), errType(),
+                              curGlCommand, curFile, curLine);
+#else
+        throw OpenGLException(message, errSrc(), errType());
+#endif // DEBUG
         break;
     default:
         severityStr = "Unknown";
